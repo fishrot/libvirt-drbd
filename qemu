@@ -44,6 +44,19 @@ function setRole() {
   exit 1
 }
 
+function setDualPrimary() {
+  yesno=$1
+  resourceName=$(echo $2 | sed -e 's|^dev="/dev/drbd/by-res/\(.*\)"|\1|');
+  for i in $(seq $MAX_ATTEMPTS); do
+    #echo "attempt $i: drbdadm net-options --allow-two-primaries=$yesno $resourceName" >>/var/log/libvirt/hook-qemu.log
+    /sbin/drbdadm net-options --allow-two-primaries=$yesno $resourceName && return;
+    sleep $SLEEP_BETWEEN_ATTEMPTS;
+  done
+  echo "$MAX_ATTEMPTS attempts executing \"drbdadm net-options --allow-two-primaries=$yesno $resourceName failed, giving up.\""  >&2
+  exit 1
+}
+
+
 trap cleanup EXIT
 
 if [ "$#" -ne 4 ]; then
@@ -58,6 +71,16 @@ task=$2
 guest_cfg=`mktemp`
 
 case "$task" in
+migrate)
+  # "qemu <guest> migrate", means that libvirt is preparing to migrate the guest to this host
+  
+  # Read XML configuration on stdin.
+  cat - > $guest_cfg
+
+  for dev in $(selectDrbdDevices $guest_cfg); do
+    setDualPrimary "yes" $dev;
+  done
+  ;;
 prepare)
   # "qemu <guest> prepare", means that libvirt is preparing to start the guest.
 
@@ -76,6 +99,7 @@ release)
 
   for dev in $(selectDrbdDevices $guest_cfg); do
     setRole secondary $dev;
+    setDualPrimary "no" $dev;
   done
   ;;
 esac

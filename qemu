@@ -34,7 +34,7 @@ function selectDrbdDevices() {
 
 function setRole() {
   role=$1;
-  resourceName=$(echo $2 | sed -e 's|^dev="/dev/drbd/by-res/\(.*\)"|\1|');
+  resourceName=$(echo $2 | sed -e 's|^dev="/dev/drbd/by-res/\+\([^/]\+\).*\?"|\1|');
   for i in $(seq $MAX_ATTEMPTS); do
     #echo "attempt $i: drbdadm $role $resourceName" >>/var/log/libvirt/hook-qemu.log
     /sbin/drbdadm $role $resourceName && return;
@@ -46,7 +46,7 @@ function setRole() {
 
 function setDualPrimary() {
   yesno=$1
-  resourceName=$(echo $2 | sed -e 's|^dev="/dev/drbd/by-res/\(.*\)"|\1|');
+  resourceName=$(echo $2 | sed -e 's|^dev="/dev/drbd/by-res/\+\([^/]\+\).*\?"|\1|');
   for i in $(seq $MAX_ATTEMPTS); do
     #echo "attempt $i: drbdadm net-options --allow-two-primaries=$yesno $resourceName" >>/var/log/libvirt/hook-qemu.log
     /sbin/drbdadm net-options --allow-two-primaries=$yesno $resourceName && return;

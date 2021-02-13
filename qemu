@@ -37,7 +37,7 @@ function setRole() {
   resourceName=$(echo $2 | sed -e 's|^dev="/dev/drbd/by-res/\+\([^/]\+\).*\?"|\1|');
   for i in $(seq $MAX_ATTEMPTS); do
     #echo "attempt $i: drbdadm $role $resourceName" >>/var/log/libvirt/hook-qemu.log
-    /sbin/drbdadm $role $resourceName && return;
+    /usr/sbin/drbdadm $role $resourceName && return;
     sleep $SLEEP_BETWEEN_ATTEMPTS;
   done
   echo "$MAX_ATTEMPTS attempts executing \"drbdadm $role $resourceName failed, giving up.\""  >&2
@@ -49,7 +49,7 @@ function setDualPrimary() {
   resourceName=$(echo $2 | sed -e 's|^dev="/dev/drbd/by-res/\+\([^/]\+\).*\?"|\1|');
   for i in $(seq $MAX_ATTEMPTS); do
     #echo "attempt $i: drbdadm net-options --allow-two-primaries=$yesno $resourceName" >>/var/log/libvirt/hook-qemu.log
-    /sbin/drbdadm net-options --allow-two-primaries=$yesno $resourceName && return;
+    /usr/sbin/drbdadm net-options --allow-two-primaries=$yesno $resourceName && return;
     sleep $SLEEP_BETWEEN_ATTEMPTS;
   done
   echo "$MAX_ATTEMPTS attempts executing \"drbdadm net-options --allow-two-primaries=$yesno $resourceName failed, giving up.\""  >&2
